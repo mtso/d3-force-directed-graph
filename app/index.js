@@ -3,22 +3,18 @@ import {
   width,
   height,
 } from '../config'
+import { drawSvgGraph } from './graph'
 
 const d3 = require('d3')
 
 document.body.style.cssText = 'background-color:lightgray'
 
-var svg = d3
-  .select('body')
-  .append('svg')
-  .attr('width', width)
-  .attr('height', height)
-  .style('background-color', 'white')
+var svg = drawSvgGraph(width, height)
 
 var sim = d3
   .forceSimulation()
   .force('link', d3.forceLink().id((_, i) => i))
-  .force('charge', d3.forceManyBody())
+  .force('charge', d3.forceManyBody().strength(-15).distanceMax([width / 4]))
   .force('center', d3.forceCenter(width / 2, height / 2))
 
 const display = (graph) => {
@@ -56,18 +52,32 @@ const display = (graph) => {
     .on('drag', onDrag)
     .on('end', onEnd)
 
+  // let node = svg
+  //   .append('g')
+  //     .attr('class', 'nodes')
+  //   .selectAll('circle')
+  //   .data(graph.nodes).enter()
+  //     .append('circle')
+  //     .attr('r', 5)
+  //     .attr('fill', 'black')
+  //     .call(handleDrag)
+
   let node = svg
     .append('g')
       .attr('class', 'nodes')
-    .selectAll('circle')
-    .data(graph.links).enter()
-      .append('circle')
-      .attr('r', 5)
-      .attr('fill', 'black')
+    .selectAll('image')
+    .data(graph.nodes).enter()
+      .append('svg:image')
+      .attr('xlink:href', 'flags.png')
+      .attr('class', d => 'flag flag-' + d.code)
+      .attr('width', 16)
+      .attr('height', '11')
+      // .attr('r', 5)
+      // .attr('fill', 'black')
       .call(handleDrag)
 
   sim.nodes(graph.nodes)
-    .on('tick')
+    .on('tick', onTick)
 
   sim.force('link')
     .links(graph.links)
@@ -79,8 +89,8 @@ const display = (graph) => {
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y)
     node
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
   }
 }
 
