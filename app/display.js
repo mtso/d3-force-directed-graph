@@ -10,7 +10,7 @@ export const handleData = (svg, flagbox, sim) => {
       .selectAll('line')
       .data(graph.links).enter()
         .append('line')
-        .attr('stroke-width', 1)
+        .attr('stroke-width', 0.3)
         .attr('stroke', 'black')
    
     let node = flagbox
