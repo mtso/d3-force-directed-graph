@@ -1,8 +1,7 @@
 const d3 = require('d3')
 
-function drawSvgGraph(width, height) {
-  return d3
-    .select('body')
+function drawSvgGraph(parent, width, height) {
+  return parent
     .append('svg')
     .attr('width', width)
     .attr('height', height)

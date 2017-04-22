@@ -4,12 +4,27 @@ import {
   height,
 } from '../config'
 import { drawSvgGraph } from './graph'
+import { handleData } from './display'
 
 const d3 = require('d3')
 
-document.body.style.cssText = 'background-color:lightgray'
+d3.select('html')
+  .style('width', '100%')
 
-var svg = drawSvgGraph(width, height)
+d3.select('body')
+  .style('width', '100%')
+  .style('background-color', 'lightgray')
+  .style('text-align', 'center')
+  .style('margin', '0')
+
+var graph = d3.select('body')
+  .append('div')
+  .style('position', 'relative')
+  .style('margin', '3em auto')
+  .style('display', 'inline-block')
+
+var svg = drawSvgGraph(graph, width, height)
+  .style('margin', '0 auto')
 
 var sim = d3
   .forceSimulation()
@@ -17,82 +32,17 @@ var sim = d3
   .force('charge', d3.forceManyBody().strength(-15).distanceMax([width / 4]))
   .force('center', d3.forceCenter(width / 2, height / 2))
 
-const display = (graph) => {
-  graph = JSON.parse(graph.responseText)
-  console.log(graph)
-
-  let link = svg
-    .append('g')
-      .attr("class", "links")
-    .selectAll('line')
-    .data(graph.links).enter()
-      .append('line')
-      .attr('stroke-width', 2)
-
-  let onStart = d => {
-    if (!d3.event.active) {
-      sim.alphaTarget(0.3).restart()
-    }
-    d.fx = d.x
-    d.fy = d.y
-  }
-  let onDrag = d => {
-    d.fx = d3.event.x
-    d.fy = d3.event.y
-  }
-  let onEnd = d => {
-    if (!d3.event.active) {
-      sim.alphaTarget(0).restart()
-    }
-    d.fx = null
-    d.fy = null    
-  }
-  let handleDrag = d3.drag()
-    .on('start', onStart)
-    .on('drag', onDrag)
-    .on('end', onEnd)
-
-  // let node = svg
-  //   .append('g')
-  //     .attr('class', 'nodes')
-  //   .selectAll('circle')
-  //   .data(graph.nodes).enter()
-  //     .append('circle')
-  //     .attr('r', 5)
-  //     .attr('fill', 'black')
-  //     .call(handleDrag)
-
-  let node = svg
-    .append('g')
-      .attr('class', 'nodes')
-    .selectAll('image')
-    .data(graph.nodes).enter()
-      .append('svg:image')
-      .attr('xlink:href', 'flags.png')
-      .attr('class', d => 'flag flag-' + d.code)
-      .attr('width', 16)
-      .attr('height', '11')
-      // .attr('r', 5)
-      // .attr('fill', 'black')
-      .call(handleDrag)
-
-  sim.nodes(graph.nodes)
-    .on('tick', onTick)
-
-  sim.force('link')
-    .links(graph.links)
-
-  function onTick() {
-    link
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y)
-    node
-      .attr('x', d => d.x)
-      .attr('y', d => d.y)
-  }
-}
+var flagbox = graph
+  .append('div')
+  .style('position', 'absolute')
+  .style('top', '0px')
+  .style('left', '0px')
 
 d3.request(data_url)
-  .get(display)
+  .get(handleData(svg, flagbox, sim))
+
+svg.append('text')
+  .text('Force Directed Graph of State Contiguity')
+  .attr('text-anchor', 'middle')
+  .attr('x', width / 2)
+  .attr('y', 40)
